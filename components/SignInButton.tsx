@@ -1,12 +1,14 @@
 'use client'
 
-import Button, {ButtonProps} from "@/components/Button";
-import {signIn} from "next-auth/react";
+import Button, { ButtonProps } from '@/components/Button'
+import { signIn } from 'next-auth/react'
 
-const SignInButton = ({children, ...rest}: ButtonProps) => {
-    return (
-        <Button {...rest} onClick={() => signIn('notion')}>{children}</Button>
-    )
+const SignInButton = ({ children, ...rest }: ButtonProps) => {
+  return (
+    <Button {...rest} onClick={() => signIn('notion')}>
+      {children}
+    </Button>
+  )
 }
 
-export default SignInButton;
+export default SignInButton

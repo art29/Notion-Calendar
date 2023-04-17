@@ -1,38 +1,41 @@
-import NextAuth from "next-auth"
-import {PrismaAdapter} from "@next-auth/prisma-adapter";
-import NotionProvider from "@/app/server/auth/providers/Notion";
-import {prisma} from "@/app/server/db";
+import NextAuth from 'next-auth'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
+import NotionProvider from '@/app/server/auth/providers/Notion'
+import { prisma } from '@/app/server/db'
 
 export const authOptions = {
-    adapter: {...PrismaAdapter(prisma), linkAccount: ({ owner, ...data }: any) => {
-            return prisma.account.create({ data })
-        }},
-    providers: [
-        NotionProvider({
-            clientId: process.env.NOTION_CLIENT_ID ?? '',
-            clientSecret: process.env.NOTION_CLIENT_SECRET ?? '',
-            redirectUri: process.env.NOTION_REDIRECT_URI ?? ''
-        }),
-    ],
-    callbacks: {
-        // @ts-ignore
-        session: async ({ session, token }) => {
-            if (session?.user) {
-                session.user.id = token.uid;
-            }
-            return session;
-        },
-        // @ts-ignore
-        jwt: async ({ user, token }) => {
-            if (user) {
-                token.uid = user.id;
-            }
-            return token;
-        }
+  adapter: {
+    ...PrismaAdapter(prisma),
+    linkAccount: ({ owner, ...data }: any) => {
+      return prisma.account.create({ data })
     },
-    session: {
-        strategy: 'jwt',
+  },
+  providers: [
+    NotionProvider({
+      clientId: process.env.NOTION_CLIENT_ID ?? '',
+      clientSecret: process.env.NOTION_CLIENT_SECRET ?? '',
+      redirectUri: process.env.NOTION_REDIRECT_URI ?? '',
+    }),
+  ],
+  callbacks: {
+    // @ts-ignore
+    session: async ({ session, token }) => {
+      if (session?.user) {
+        session.user.id = token.uid
+      }
+      return session
     },
+    // @ts-ignore
+    jwt: async ({ user, token }) => {
+      if (user) {
+        token.uid = user.id
+      }
+      return token
+    },
+  },
+  session: {
+    strategy: 'jwt',
+  },
 }
 
 // @ts-ignore
