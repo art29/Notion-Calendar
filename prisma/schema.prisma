@@ -64,11 +64,12 @@ model VerificationToken {
 model Calendar {
   id               String             @id @default(cuid())
   calendarHash     String
-  database_id      String
+  databaseId       String
   User             User               @relation(fields: [userId], references: [id])
   userId           String
   title            String
   description      String
+  dateField        String
   calendarString   String
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
@@ -79,7 +80,7 @@ model Calendar {
 
 model CalendarReminder {
   id         String   @id @default(cuid())
-  Calendar   Calendar @relation(fields: [calendarId], references: [id])
+  Calendar   Calendar @relation(fields: [calendarId], references: [id], onDelete: Cascade)
   calendarId String
   remindAt   Int
 }

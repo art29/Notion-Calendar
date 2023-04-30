@@ -6,14 +6,12 @@ import {
   PartialPageObjectResponse,
 } from '@notionhq/client/build/src/api-endpoints'
 import { EnhancedNotionDatabaseObject } from '@/app/dashboard/page'
-import { getServerSession } from 'next-auth'
+import { getServerSession, Session } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/app/server/db'
 
-export const getNotionData = async (): Promise<
-  EnhancedNotionDatabaseObject[]
-> => {
+export const hasNotionDatabases = async () => {
   // @ts-ignore
   const session = await getServerSession(authOptions)
   if (!session) {
@@ -31,26 +29,51 @@ export const getNotionData = async (): Promise<
       where: {
         userId: session.user?.id,
       },
+      include: {
+        CalendarReminder: true,
+      },
     })
+    return session.user.id && dbs.length > 0
+  } else {
+    return false
+  }
+}
 
-    if (user && dbs) {
-      const client = new Client({ auth: user?.access_token ?? '' })
-      const databases = await getDatabasesByName(client)
-      const filteredDB =
-        (databases.filter(
-          (d) => d.object === 'database',
-        ) as DatabaseObjectResponse[]) ?? []
-      return filteredDB.map((db) => {
-        const savedDb = dbs.find((d) => d.database_id === db.id)
-        return {
-          ...db,
-          configured: !!savedDb,
-          url: savedDb?.calendarHash ?? '',
-        }
-      })
-    } else {
-      return []
-    }
+export const getNotionData = async (
+  session: Session,
+): Promise<EnhancedNotionDatabaseObject[]> => {
+  const user = await prisma.account.findFirst({
+    where: {
+      userId: session.user?.id,
+    },
+  })
+
+  const dbs = await prisma.calendar.findMany({
+    where: {
+      userId: session.user?.id,
+    },
+    include: {
+      CalendarReminder: true,
+    },
+  })
+
+  if (user && dbs) {
+    const client = new Client({ auth: user?.access_token ?? '' })
+    const databases = await getDatabasesByName(client)
+    const filteredDB =
+      (databases.filter(
+        (d) => d.object === 'database',
+      ) as DatabaseObjectResponse[]) ?? []
+    return filteredDB.map((db) => {
+      const savedDb = dbs.find((d) => d.databaseId === db.id)
+
+      return {
+        ...db,
+        configured: !!savedDb,
+        calendar: savedDb,
+        url: savedDb?.calendarHash ?? '',
+      }
+    })
   } else {
     return []
   }

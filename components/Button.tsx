@@ -20,7 +20,9 @@ const Button = ({
   const themeStyle = (): string => {
     switch (theme) {
       case 'dark':
-        return 'rounded-lg bg-black text-white py-1 px-2'
+        return `rounded-lg text-white py-1 px-2 ${
+          disabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-black'
+        }`
       case 'light':
         return 'rounded-lg bg-white text-black py-1 px-2'
       case 'link':

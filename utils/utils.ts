@@ -9,8 +9,7 @@ export const tagifySettings: TagifySettings = {
     maxItems: 3,
     position: 'text',
   },
-  // @ts-ignore (Wrong typing)
-  originalInputValueFormat: (tagData) => tagData.id,
+  duplicates: true,
   enforceWhitelist: true,
 }
 
@@ -51,4 +50,19 @@ export const generateTagifyWhitelist = (
         value: p.name,
       }
     })
+}
+
+interface TagifyString {
+  id: string
+  title: string
+  value: string
+  prefix: string
+}
+
+const getTagifyIdFromString = (input: string) => {
+  return (
+    input
+      .match(/\[\[(.*?)\]\]/gm)
+      ?.map((m: string) => (JSON.parse(m) as TagifyString).id) ?? []
+  )
 }

@@ -3,24 +3,48 @@
 import Button from '@/components/Button'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
+  faCheck,
   faEdit,
   faLink,
   faLinkSlash,
+  faTrash,
   faWrench,
 } from '@fortawesome/free-solid-svg-icons'
 import { EnhancedNotionDatabaseObject } from '@/app/dashboard/page'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import ConfigureModal from '@/components/ConfigureModal'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
 
-interface NotionDatabaseTableProps {
-  data: EnhancedNotionDatabaseObject[]
-}
-
-const NotionDatabaseTable = ({ data }: NotionDatabaseTableProps) => {
+const NotionDatabaseTable = () => {
   const [selectedDatabase, setSelectedDatabase] =
     useState<EnhancedNotionDatabaseObject | null>(null)
+  const [copiedCalendarUrl, setCopiedCalendarUrl] = useState(false)
+  const [data, setData] = useState<null | EnhancedNotionDatabaseObject[]>(null)
 
-  return (
+  const getDatabase = async () => {
+    fetch(`/api/databases`)
+      .then(async (r) => r.json())
+      .then((res) => {
+        setData(res)
+      })
+      .catch((e) => console.error(e))
+  }
+
+  useEffect(() => {
+    getDatabase()
+  }, [])
+
+  const deleteDatabase = (calendarId: string) => {
+    fetch(`/api/databases?calendarId=${calendarId}`, {
+      method: 'DELETE',
+    }).then(async (r) => {
+      if (r.status === 200) {
+        await getDatabase()
+      }
+    })
+  }
+
+  return data ? (
     <>
       <div className="my-3">
         <div className="relative overflow-x-auto shadow-sm rounded-lg">
@@ -57,12 +81,24 @@ const NotionDatabaseTable = ({ data }: NotionDatabaseTableProps) => {
                   <td className="px-6 py-4">{d.title[0].plain_text}</td>
                   <td className="px-6 py-4">
                     {d.configured ? (
-                      <Button theme="link" styling="px-0">
-                        <>
-                          Link
-                          <FontAwesomeIcon className="pl-1" icon={faLink} />
-                        </>
-                      </Button>
+                      <>
+                        <CopyToClipboard
+                          text={d.calendar?.databaseId ?? ''}
+                          onCopy={() => setCopiedCalendarUrl(true)}
+                        >
+                          <Button theme="link" styling="px-0">
+                            <>
+                              Link
+                              <FontAwesomeIcon className="pl-1" icon={faLink} />
+                            </>
+                          </Button>
+                        </CopyToClipboard>
+                        {copiedCalendarUrl && (
+                          <span className="pl-1">
+                            Copied <FontAwesomeIcon icon={faCheck} />
+                          </span>
+                        )}
+                      </>
                     ) : (
                       <FontAwesomeIcon
                         className="pl-1 text-red-700 text-lg"
@@ -79,8 +115,10 @@ const NotionDatabaseTable = ({ data }: NotionDatabaseTableProps) => {
                       <div className="flex items-center">
                         {d.configured ? (
                           <>
-                            Edit
-                            <FontAwesomeIcon className="pl-1" icon={faEdit} />
+                            <span>
+                              Edit
+                              <FontAwesomeIcon className="pl-1" icon={faEdit} />
+                            </span>
                           </>
                         ) : (
                           <>
@@ -90,6 +128,23 @@ const NotionDatabaseTable = ({ data }: NotionDatabaseTableProps) => {
                         )}
                       </div>
                     </Button>
+                    {d.configured && d && d.calendar?.id && (
+                      <Button
+                        onClick={() => deleteDatabase(d.calendar?.id ?? '')}
+                        theme="link"
+                        styling="pl-3 text-red-700"
+                      >
+                        <div className="flex items-center">
+                          <span>
+                            Delete
+                            <FontAwesomeIcon
+                              className="pl-1 text-red-700"
+                              icon={faTrash}
+                            />
+                          </span>
+                        </div>
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}
@@ -99,9 +154,12 @@ const NotionDatabaseTable = ({ data }: NotionDatabaseTableProps) => {
       </div>
       <ConfigureModal
         database={selectedDatabase}
+        refreshDatabases={getDatabase}
         closeModal={() => setSelectedDatabase(null)}
       />
     </>
+  ) : (
+    <div>Loading...</div>
   )
 }
 
