@@ -10,12 +10,18 @@ import { getServerSession, Session } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/app/server/db'
+import {
+  NotionDateType,
+  NotionProperty,
+  NotionPropertyTypes,
+} from '@/types/notionTypes'
+import dayjs from 'dayjs'
+import { EventAttributes } from 'ics'
 
 export const hasNotionDatabases = async () => {
   // @ts-ignore
   const session = await getServerSession(authOptions)
   if (!session) {
-    // TODO: Add callback URL
     redirect('/api/auth/signin')
   }
   if (session && session.user) {
@@ -103,10 +109,180 @@ export const getDatabasesByName = async (
   return response.results
 }
 
+export const getCalendarICSData = async (
+  calendarId: string,
+  hash: string,
+): Promise<EventAttributes[] | null> => {
+  const calendar = await prisma.calendar.findFirst({
+    where: {
+      id: calendarId,
+      calendarHash: hash,
+    },
+    include: {
+      CalendarReminder: true,
+    },
+  })
+
+  if (!calendar) {
+    return null
+  }
+
+  const account = await prisma.account.findFirst({
+    where: {
+      userId: calendar.userId,
+    },
+  })
+
+  if (!account) {
+    return null
+  } else {
+    const client = new Client({ auth: account?.access_token ?? '' })
+    const data = (await queryDatabase(
+      client,
+      calendar.databaseId,
+    )) as Array<PageObjectResponse>
+    const events: EventAttributes[] = []
+    if (data) {
+      data.forEach((e) => {
+        const dateField = getDateFromDatabase(calendar.dateField, e.properties)
+        const title = replaceTagifyIdByValue(calendar.title, e.properties)
+        const description = replaceTagifyIdByValue(
+          calendar.description,
+          e.properties,
+        )
+
+        if (!dateField || !title) {
+          return
+        }
+
+        if (dateField.end) {
+          events.push({
+            title: title,
+            description: description ?? '',
+            start: dateField.start,
+            end: dateField.end,
+          })
+        } else if (dateField.duration) {
+          if (dateField.end) {
+            events.push({
+              title: title,
+              description: description ?? '',
+              start: dateField.start,
+              duration: dateField.duration,
+            })
+          }
+        }
+      })
+    }
+    return events
+  }
+}
 export const queryDatabase = async (notion: Client, databaseId: string) => {
   const response = await notion.databases.query({
     database_id: databaseId,
   })
 
   return response.results
+}
+
+const getDateFromDatabase = (
+  id: string,
+  properties: NotionProperty,
+): NotionDateType | null => {
+  const property = Object.values(properties).find((p) => p.id === id)
+
+  if (property?.type === 'date' && property.date) {
+    const startDate = new Date(property.date.start)
+    const event: NotionDateType = {
+      start: [
+        startDate.getFullYear(),
+        startDate.getMonth() + 1,
+        startDate.getDate(),
+        startDate.getHours(),
+        startDate.getMinutes(),
+      ],
+    }
+
+    if (property.date.end) {
+      const endDate = new Date(property.date.end)
+      event['end'] = [
+        endDate.getFullYear(),
+        endDate.getMonth() + 1,
+        endDate.getDate(),
+        endDate.getHours(),
+        endDate.getMinutes(),
+      ]
+    } else {
+      event['duration'] = {
+        hours: 24,
+        minutes: 0,
+      }
+    }
+
+    return event
+  } else {
+    return null
+  }
+}
+
+interface TagifyString {
+  id: string
+  title: string
+  value: string
+  prefix: string
+}
+
+const replaceTagifyIdByValue = (
+  input: string,
+  properties: NotionProperty,
+): string => {
+  return input.replace(
+    /\[\[(.*?)\]\]/gm,
+    (_, p1) =>
+      getValueFromProperty((JSON.parse(p1) as TagifyString).id, properties) ??
+      '',
+  )
+}
+
+const getValueFromProperty = (
+  id: string,
+  properties: NotionProperty,
+): string | null => {
+  const property = Object.values(properties).find((p) => p.id === id)
+
+  if (property?.type === 'number') {
+    return String(property.number)
+  } else if (property?.type === 'url') {
+    return property.url
+  } else if (property?.type === 'select') {
+    return property.select.name
+  } else if (property?.type === 'multi_select') {
+    return property.multi_select.map((s) => s.name).join(', ')
+  } else if (property?.type === 'status') {
+    return property.status.name
+  } else if (property?.type === 'date') {
+    if (property.date) {
+      if (property.date.end) {
+        return `${dayjs(property.date.start).format('DD-MM-YYYY')} - ${dayjs(
+          property.date.end,
+        ).format('DD-MM-YYYY')}`
+      } else {
+        return dayjs(property.date.start).format('DD-MM-YYYY')
+      }
+    } else {
+      return null
+    }
+  } else if (property?.type === 'email') {
+    return property.email
+  } else if (property?.type === 'phone_number') {
+    return property.phone_number
+  } else if (property?.type === 'checkbox') {
+    return property.checkbox ? 'true' : 'false'
+  } else if (property?.type === 'title') {
+    return property.title.length ? property.title[0].plain_text : null
+  } else if (property?.type === 'rich_text') {
+    return property.rich_text.length ? property.rich_text[0].plain_text : null
+  } else {
+    return null
+  }
 }

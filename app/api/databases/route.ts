@@ -4,9 +4,9 @@ import { prisma } from '@/app/server/db'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { z } from 'zod'
-import { Client } from '@notionhq/client'
-import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints'
-import { getDatabasesByName, getNotionData } from '@/app/server/notion'
+import randomstring from 'randomstring'
+import { getNotionData } from '@/app/server/notion'
+import { isUserPremium } from '@/utils/stripe'
 
 const formatReminder = (reminder: Reminder): { remindAt: number } => {
   switch (reminder.unit) {
@@ -28,12 +28,13 @@ const databaseApiFormSchema = z.object({
       z.object({
         duration: z.number(),
         unit: z.union([z.literal('min'), z.literal('hour'), z.literal('day')]),
-        id: z.string(),
+        id: z.string().or(z.number()),
       }),
     )
     .min(0),
   databaseId: z.string(),
   calendarId: z.string().optional(),
+  primary: z.boolean().optional(),
 })
 
 export async function GET(request: Request) {
@@ -66,11 +67,34 @@ export async function POST(request: Request) {
       { status: 403 },
     )
   } else {
+    const { isPremium } = await isUserPremium()
+
+    if (!isPremium) {
+      const currentDbs = await prisma.calendar.findMany({
+        where: {
+          userId: session.user.id,
+        },
+      })
+
+      if (currentDbs.length > 0) {
+        if (
+          (result.data.calendarId && currentDbs.length > 1) ||
+          !result.data.calendarId
+        ) {
+          if (currentDbs.some((d) => d.primary)) {
+            return NextResponse.json({ error: 'not premium' })
+          } else {
+            result.data.primary = true
+          }
+        }
+      }
+    }
+
     const reminders = result.data.reminders
 
     const cal = await prisma.calendar.upsert({
       where: {
-        id: result.data?.calendarId ?? '-1',
+        id: result.data.calendarId ?? '-1',
       },
       create: {
         userId: session.user.id,
@@ -78,8 +102,8 @@ export async function POST(request: Request) {
         title: result.data.event_name,
         dateField: result.data.event_date,
         description: result.data.event_description,
-        calendarHash: '',
-        calendarString: '',
+        calendarHash: randomstring.generate(16),
+        primary: result.data.primary ?? false,
         CalendarReminder: {
           create: reminders.map((r) => formatReminder(r)),
         },
@@ -91,7 +115,6 @@ export async function POST(request: Request) {
         dateField: result.data.event_date,
         description: result.data.event_description,
         calendarHash: '',
-        calendarString: '',
         CalendarReminder: {
           deleteMany: {},
           createMany: {
@@ -112,6 +135,17 @@ export async function POST(request: Request) {
 export async function DELETE(request: Request) {
   const { searchParams } = new URL(request.url)
   const calendarId = searchParams.get('calendarId')
+
+  // @ts-ignore
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user.id) {
+    return NextResponse.json(
+      { error: 'account non authenticated' },
+      { status: 403 },
+    )
+  }
+
   if (!!calendarId) {
     const res = await prisma.calendar.delete({
       where: {
@@ -126,5 +160,49 @@ export async function DELETE(request: Request) {
     }
   } else {
     return NextResponse.json({ error: 'missing params' }, { status: 422 })
+  }
+}
+
+export async function PUT(request: Request) {
+  // @ts-ignore
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user.id) {
+    return NextResponse.json(
+      { error: 'account non authenticated' },
+      { status: 403 },
+    )
+  }
+
+  const res = await request.json()
+  if (!res.calendarId) {
+    return NextResponse.json(
+      {
+        error: 'missing calendarId',
+      },
+      { status: 422 },
+    )
+  } else {
+    await prisma.calendar.updateMany({
+      where: {
+        userId: session.user.id,
+      },
+      data: {
+        primary: false,
+      },
+    })
+
+    await prisma.calendar.update({
+      where: {
+        id: res.calendarId,
+      },
+      data: {
+        primary: true,
+      },
+    })
+
+    return NextResponse.json({
+      updated: true,
+    })
   }
 }

@@ -24,7 +24,9 @@ const Button = ({
           disabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-black'
         }`
       case 'light':
-        return 'rounded-lg bg-white text-black py-1 px-2'
+        return `rounded-lg text-black py-1 px-2 ${
+          disabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-white'
+        }`
       case 'link':
         return 'bg-white text-black underline underline-offset-4'
       case 'none':

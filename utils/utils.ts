@@ -1,5 +1,6 @@
 import { TagifySettings } from '@yaireo/tagify'
 import { EnhancedNotionDatabaseObject } from '@/app/dashboard/page'
+import { RichTextItemResponse } from '@notionhq/client/build/src/api-endpoints'
 
 export const tagifySettings: TagifySettings = {
   mode: 'mix',
@@ -50,19 +51,4 @@ export const generateTagifyWhitelist = (
         value: p.name,
       }
     })
-}
-
-interface TagifyString {
-  id: string
-  title: string
-  value: string
-  prefix: string
-}
-
-const getTagifyIdFromString = (input: string) => {
-  return (
-    input
-      .match(/\[\[(.*?)\]\]/gm)
-      ?.map((m: string) => (JSON.parse(m) as TagifyString).id) ?? []
-  )
 }

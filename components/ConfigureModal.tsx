@@ -94,20 +94,22 @@ const ConfigureModal = ({
   )
   const { register, handleSubmit, setValue, formState } =
     useForm<ConfigureDatabaseEventForm>({
-      defaultValues: {
-        ...(database?.configured && database.calendar
-          ? {
+      ...(database?.configured && database.calendar
+        ? {
+            values: {
               event_name: database.calendar.title,
               event_date: database.calendar.dateField,
               event_description: database.calendar.description,
               reminders: database.calendar.CalendarReminder.map((r) =>
                 generateReminderFromModel(r),
               ),
-            }
-          : {
+            },
+          }
+        : {
+            defaultValues: {
               reminders: [],
-            }),
-      },
+            },
+          }),
       resolver: zodResolver(databaseFormSchema),
     })
 

@@ -7,6 +7,8 @@ import SignInButton from '@/components/SignInButton'
 import Alert from '@/components/Alert'
 import NotionDatabaseTable from '@/components/NotionDatabaseTable'
 import { Calendar, CalendarReminder } from '.prisma/client'
+import { isUserPremium } from '@/utils/stripe'
+import Link from 'next/link'
 
 export interface EnhancedNotionDatabaseObject extends DatabaseObjectResponse {
   configured: boolean
@@ -15,14 +17,27 @@ export interface EnhancedNotionDatabaseObject extends DatabaseObjectResponse {
 }
 
 export default async function Dashboard() {
-  let hasNotionDb = await hasNotionDatabases()
+  const hasNotionDb = await hasNotionDatabases()
+  const { isPremium } = await isUserPremium()
 
   return (
     <div className="mx-auto px-4 lg:px-10 w-full lg:w-[80%]">
       <h2 className="text-4xl mb-4 font-medium">Calendar Dashboard</h2>
       {hasNotionDb ? (
         <>
-          <NotionDatabaseTable />
+          <NotionDatabaseTable isPremium={isPremium} />
+          {!isPremium && (
+            <div className="text-sm font-semibold text-gray-600 mb-3">
+              Become a{' '}
+              <Link
+                className="text-black underline underline-offset-4"
+                href="/#pricing"
+              >
+                premium user
+              </Link>{' '}
+              to access unlimited databases!
+            </div>
+          )}
           <div className="text-sm text-gray-500">
             To add missing databases, click{' '}
             <SignInButton theme="link">here</SignInButton> to give permission to

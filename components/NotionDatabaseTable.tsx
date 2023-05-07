@@ -15,10 +15,16 @@ import { useEffect, useState } from 'react'
 import ConfigureModal from '@/components/ConfigureModal'
 import { CopyToClipboard } from 'react-copy-to-clipboard'
 
-const NotionDatabaseTable = () => {
+interface NotionDatabaseTableProps {
+  isPremium: boolean
+}
+
+const NotionDatabaseTable = ({ isPremium }: NotionDatabaseTableProps) => {
   const [selectedDatabase, setSelectedDatabase] =
     useState<EnhancedNotionDatabaseObject | null>(null)
-  const [copiedCalendarUrl, setCopiedCalendarUrl] = useState(false)
+  const [copiedCalendarUrl, setCopiedCalendarUrl] = useState<string | null>(
+    null,
+  )
   const [data, setData] = useState<null | EnhancedNotionDatabaseObject[]>(null)
 
   const getDatabase = async () => {
@@ -43,6 +49,8 @@ const NotionDatabaseTable = () => {
       }
     })
   }
+
+  // TODO: Use primary logic
 
   return data ? (
     <>
@@ -80,11 +88,16 @@ const NotionDatabaseTable = () => {
                   </th>
                   <td className="px-6 py-4">{d.title[0].plain_text}</td>
                   <td className="px-6 py-4">
-                    {d.configured ? (
+                    {d.configured && d.calendar ? (
                       <>
                         <CopyToClipboard
-                          text={d.calendar?.databaseId ?? ''}
-                          onCopy={() => setCopiedCalendarUrl(true)}
+                          text={
+                            `${process.env.NEXT_PUBLIC_ICS_URL}/api/calendar/${d.calendar.id}?hash=${d.calendar.calendarHash}` ??
+                            ''
+                          }
+                          onCopy={() =>
+                            setCopiedCalendarUrl(d.calendar?.id ?? '')
+                          }
                         >
                           <Button theme="link" styling="px-0">
                             <>
@@ -93,7 +106,7 @@ const NotionDatabaseTable = () => {
                             </>
                           </Button>
                         </CopyToClipboard>
-                        {copiedCalendarUrl && (
+                        {copiedCalendarUrl === d.calendar.id && (
                           <span className="pl-1">
                             Copied <FontAwesomeIcon icon={faCheck} />
                           </span>
@@ -159,6 +172,7 @@ const NotionDatabaseTable = () => {
       />
     </>
   ) : (
+    // TODO: Check if premium, if not only allow one (if they have more, remove access to all of them except their primary)
     <div>Loading...</div>
   )
 }

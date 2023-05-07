@@ -5,6 +5,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 import { config } from '@fortawesome/fontawesome-svg-core'
+import { isUserPremium } from '@/utils/stripe'
 config.autoAddCss = false
 export const metadata = {
   title: 'Notion Calendar',
@@ -18,11 +19,13 @@ export default async function RootLayout({
 }) {
   // @ts-ignore
   const session = await getServerSession(authOptions)
+  const { isPremium } = await isUserPremium()
+
   return (
     <html lang="en">
       <body id="body">
         <main className="flex flex-col min-h-screen">
-          <Header session={session} />
+          <Header session={session} isPremium={isPremium} />
           <div className="flex-grow">{children}</div>
           <Footer />
         </main>
