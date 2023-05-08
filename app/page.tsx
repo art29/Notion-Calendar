@@ -17,7 +17,7 @@ export default async function Home() {
         Notion Calendar is an easy way to connect your notion calendar anywhere
         (Google Calendar, Outlook and more).
       </h2>
-      <PricingTable session={session} currentPlans={currentPlans} />
+      <PricingTable session={session} currentPlans={currentPlans ?? []} />
     </div>
   )
 }
