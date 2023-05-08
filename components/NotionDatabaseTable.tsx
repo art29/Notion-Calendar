@@ -122,7 +122,7 @@ const NotionDatabaseTable = ({ isPremium }: NotionDatabaseTableProps) => {
                       <>
                         <CopyToClipboard
                           text={
-                            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/calendar/${d.calendar.id}?hash=${d.calendar.calendarHash}` ??
+                            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/calendar/${d.calendar.id}.ics?hash=${d.calendar.calendarHash}` ??
                             ''
                           }
                           onCopy={() =>

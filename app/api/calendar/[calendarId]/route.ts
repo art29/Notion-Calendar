@@ -17,7 +17,7 @@ export async function GET(
     return NextResponse.json({ error: 'missing hash' }, { status: 403 })
   }
 
-  const data = await getCalendarICSData(calendarId, hash)
+  const data = await getCalendarICSData(calendarId.replace('.ics', ''), hash)
 
   if (data) {
     const { error, value } = createEvents(data)
