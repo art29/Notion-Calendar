@@ -82,12 +82,19 @@ export async function POST(request: Request) {
           !result.data.calendarId
         ) {
           if (currentDbs.some((d) => d.primary)) {
-            return NextResponse.json({ error: 'not premium' }, { status: 500 })
-          } else {
-            result.data.primary = true
+            await prisma.calendar.updateMany({
+              where: {
+                userId: session.user.id,
+              },
+              data: {
+                primary: false,
+              },
+            })
           }
         }
       }
+
+      result.data.primary = true
     }
 
     const reminders = result.data.reminders

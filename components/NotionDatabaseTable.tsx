@@ -150,7 +150,9 @@ const NotionDatabaseTable = ({ isPremium }: NotionDatabaseTableProps) => {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    {isDisabled(d) ? (
+                    {isDisabled(d) &&
+                    data.some((d) => d.calendar?.primary) &&
+                    d.configured ? (
                       <Button
                         onClick={() => setAsPrimary(d.calendar?.id)}
                         theme="link"

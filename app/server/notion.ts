@@ -40,7 +40,15 @@ export const hasNotionDatabases = async () => {
         CalendarReminder: true,
       },
     })
-    return session.user.id && dbs.length > 0
+
+    if (user && dbs) {
+      const client = new Client({ auth: user?.access_token ?? '' })
+      const databases = await getDatabasesByName(client)
+
+      return databases.length > 0
+    } else {
+      return false
+    }
   } else {
     return false
   }
