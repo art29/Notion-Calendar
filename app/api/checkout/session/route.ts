@@ -75,7 +75,7 @@ export async function GET(request: Request) {
     )
   }
 
-  const customer = await findStripeCustomer(userSession)
+  const customer = await findStripeCustomer(userSession.user.id)
   if (!customer) {
     return NextResponse.json(
       { error: 'An error occurred, try again later' },

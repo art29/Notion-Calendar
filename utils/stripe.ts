@@ -56,7 +56,7 @@ export const findOrCreateStripeCustomer = async (
 }
 
 export const findStripeCustomer = async (
-  userId?: string,
+  userId: string,
 ): Promise<null | string> => {
   const user = await prisma.user.findUnique({
     where: {
@@ -71,12 +71,12 @@ const getUserActiveSubscriptions = async (
   userId?: string,
 ): Promise<null | Stripe.Subscription[]> => {
   // @ts-ignore
-  const userSession = await getServerSession(authOptions)
-  if (!userSession?.user.id && !userId) {
+  const user = userId ?? (await getServerSession(authOptions)).user.id
+  if (!user) {
     return null
   }
 
-  const customer = await findStripeCustomer(userId ?? userSession?.user.id)
+  const customer = await findStripeCustomer(user)
   if (!customer) {
     return null
   }
