@@ -35,7 +35,8 @@ export default async function Dashboard() {
               >
                 premium user
               </Link>{' '}
-              to access unlimited databases!
+              to access unlimited databases! Until then, you are allowed one
+              primary database that will be active.
             </div>
           )}
           <div className="text-sm text-gray-500">

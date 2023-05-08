@@ -82,7 +82,7 @@ export async function POST(request: Request) {
           !result.data.calendarId
         ) {
           if (currentDbs.some((d) => d.primary)) {
-            return NextResponse.json({ error: 'not premium' })
+            return NextResponse.json({ error: 'not premium' }, { status: 500 })
           } else {
             result.data.primary = true
           }
@@ -114,7 +114,7 @@ export async function POST(request: Request) {
         title: result.data.event_name,
         dateField: result.data.event_date,
         description: result.data.event_description,
-        calendarHash: '',
+        primary: result.data.primary ?? false,
         CalendarReminder: {
           deleteMany: {},
           createMany: {

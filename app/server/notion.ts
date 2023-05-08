@@ -17,6 +17,7 @@ import {
 } from '@/types/notionTypes'
 import dayjs from 'dayjs'
 import { EventAttributes } from 'ics'
+import { isUserPremium } from '@/utils/stripe'
 
 export const hasNotionDatabases = async () => {
   // @ts-ignore
@@ -123,7 +124,9 @@ export const getCalendarICSData = async (
     },
   })
 
-  if (!calendar) {
+  const { isPremium } = await isUserPremium()
+
+  if (!calendar || (!isPremium && !calendar.primary)) {
     return null
   }
 

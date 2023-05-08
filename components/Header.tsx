@@ -13,8 +13,6 @@ interface HeaderProps {
 }
 
 const Header = ({ session, isPremium }: HeaderProps) => {
-  // TODO: Add resources page
-
   return (
     <div className="flex flex-col gap-y-2 lg:gap-y-0 lg:flex-row lg:justify-between py-3 px-5">
       <div className="flex items-center gap-x-3">
@@ -27,7 +25,7 @@ const Header = ({ session, isPremium }: HeaderProps) => {
         <Link href="#pricing" className="text-black">
           Pricing
         </Link>
-        <Link href="#resources" className="text-black">
+        <Link href="/resources" className="text-black">
           Resources
         </Link>
       </div>

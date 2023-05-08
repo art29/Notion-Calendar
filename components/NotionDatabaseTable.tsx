@@ -7,6 +7,7 @@ import {
   faEdit,
   faLink,
   faLinkSlash,
+  faStar,
   faTrash,
   faWrench,
 } from '@fortawesome/free-solid-svg-icons'
@@ -50,7 +51,36 @@ const NotionDatabaseTable = ({ isPremium }: NotionDatabaseTableProps) => {
     })
   }
 
-  // TODO: Use primary logic
+  const setAsPrimary = (calendarId?: string) => {
+    if (calendarId) {
+      fetch(`/api/databases`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          calendarId: calendarId,
+        }),
+      }).then(async (r) => {
+        if (r.status === 200) {
+          await getDatabase()
+        }
+      })
+    }
+  }
+
+  const statusColor = (database: EnhancedNotionDatabaseObject) => {
+    if (database.configured) {
+      if (isPremium || database.calendar?.primary) {
+        return 'bg-green-700'
+      } else {
+        return 'bg-orange-600'
+      }
+    } else {
+      return 'bg-red-700'
+    }
+  }
+
+  const isDisabled = (database: EnhancedNotionDatabaseObject) => {
+    return !isPremium && !database.calendar?.primary
+  }
 
   return data ? (
     <>
@@ -81,18 +111,18 @@ const NotionDatabaseTable = ({ isPremium }: NotionDatabaseTableProps) => {
                     className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
                   >
                     <div
-                      className={`rounded-full h-4 w-4 shadow-lg ${
-                        d.configured ? 'bg-green-700' : 'bg-red-700'
-                      }`}
+                      className={`rounded-full h-4 w-4 shadow-lg ${statusColor(
+                        d,
+                      )}`}
                     ></div>
                   </th>
                   <td className="px-6 py-4">{d.title[0].plain_text}</td>
                   <td className="px-6 py-4">
-                    {d.configured && d.calendar ? (
+                    {d.configured && d.calendar && !isDisabled(d) ? (
                       <>
                         <CopyToClipboard
                           text={
-                            `${process.env.NEXT_PUBLIC_ICS_URL}/api/calendar/${d.calendar.id}?hash=${d.calendar.calendarHash}` ??
+                            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/calendar/${d.calendar.id}?hash=${d.calendar.calendarHash}` ??
                             ''
                           }
                           onCopy={() =>
@@ -120,43 +150,64 @@ const NotionDatabaseTable = ({ isPremium }: NotionDatabaseTableProps) => {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <Button
-                      onClick={() => setSelectedDatabase(d)}
-                      theme="link"
-                      styling="px-0"
-                    >
-                      <div className="flex items-center">
-                        {d.configured ? (
-                          <>
-                            <span>
-                              Edit
-                              <FontAwesomeIcon className="pl-1" icon={faEdit} />
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            Configure
-                            <FontAwesomeIcon className="pl-1" icon={faWrench} />
-                          </>
-                        )}
-                      </div>
-                    </Button>
-                    {d.configured && d && d.calendar?.id && (
+                    {isDisabled(d) ? (
                       <Button
-                        onClick={() => deleteDatabase(d.calendar?.id ?? '')}
+                        onClick={() => setAsPrimary(d.calendar?.id)}
                         theme="link"
-                        styling="pl-3 text-red-700"
+                        styling="px-0"
                       >
                         <div className="flex items-center">
-                          <span>
-                            Delete
-                            <FontAwesomeIcon
-                              className="pl-1 text-red-700"
-                              icon={faTrash}
-                            />
-                          </span>
+                          Set as primary{' '}
+                          <FontAwesomeIcon className="pl-1" icon={faStar} />
                         </div>
                       </Button>
+                    ) : (
+                      <div>
+                        <Button
+                          onClick={() => setSelectedDatabase(d)}
+                          theme="link"
+                          styling="px-0"
+                        >
+                          <div className="flex items-center">
+                            {d.configured ? (
+                              <>
+                                <span>
+                                  Edit
+                                  <FontAwesomeIcon
+                                    className="pl-1"
+                                    icon={faEdit}
+                                  />
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                Configure
+                                <FontAwesomeIcon
+                                  className="pl-1"
+                                  icon={faWrench}
+                                />
+                              </>
+                            )}
+                          </div>
+                        </Button>
+                        {d.configured && d && d.calendar?.id && (
+                          <Button
+                            onClick={() => deleteDatabase(d.calendar?.id ?? '')}
+                            theme="link"
+                            styling="pl-3 text-red-700"
+                          >
+                            <div className="flex items-center">
+                              <span>
+                                Delete
+                                <FontAwesomeIcon
+                                  className="pl-1 text-red-700"
+                                  icon={faTrash}
+                                />
+                              </span>
+                            </div>
+                          </Button>
+                        )}
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -172,8 +223,16 @@ const NotionDatabaseTable = ({ isPremium }: NotionDatabaseTableProps) => {
       />
     </>
   ) : (
-    // TODO: Check if premium, if not only allow one (if they have more, remove access to all of them except their primary)
-    <div>Loading...</div>
+    <div className="flex w-full justify-center py-6 my-2 bg-gray-300 rounded-lg">
+      Loading Calendars...
+      <div
+        className="ml-3 animate-spin inline-block w-6 h-6 border-[3px] border-current border-t-transparent text-gray-800 rounded-full"
+        role="status"
+        aria-label="loading"
+      >
+        <span className="sr-only">Loading...</span>
+      </div>
+    </div>
   )
 }
 

@@ -1,0 +1,39 @@
+name: Test & Deploy
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Using NodeJS 18.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 18.x
+      - name: Install dependencies
+        run: yarn install
+      - name: Running Prettier
+        run: yarn run prettier:check
+      - name: Run Lint
+        run: yarn run lint
+  deploy:
+    needs: test
+    name: Deploy on Main
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Deploy through SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            export NVM_DIR=~/.nvm
+            source ~/.nvm/nvm.sh
+            sh deploy-notion-calendar.sh
