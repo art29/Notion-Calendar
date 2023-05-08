@@ -28,7 +28,7 @@ export const pricing: Pricing = {
       {
         title: 'Premium',
         description: 'Access to unlimited calendars!',
-        price: 1,
+        price: 1.49,
         linePrice: process.env.NEXT_PUBLIC_MONTHLY_LINE_PRICE_PREMIUM ?? '',
       },
     ],
@@ -45,7 +45,7 @@ export const pricing: Pricing = {
       {
         title: 'Premium',
         description: 'Access to unlimited calendars!',
-        price: 10,
+        price: 13.99,
         linePrice: process.env.NEXT_PUBLIC_YEARLY_LINE_PRICE_PREMIUM ?? '',
       },
     ],
