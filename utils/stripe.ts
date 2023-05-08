@@ -56,27 +56,27 @@ export const findOrCreateStripeCustomer = async (
 }
 
 export const findStripeCustomer = async (
-  session: Session,
+  userId?: string,
 ): Promise<null | string> => {
   const user = await prisma.user.findUnique({
     where: {
-      id: session.user.id,
+      id: userId,
     },
   })
 
   return user?.stripeCustomerId ?? null
 }
 
-const getUserActiveSubscriptions = async (): Promise<
-  null | Stripe.Subscription[]
-> => {
+const getUserActiveSubscriptions = async (
+  userId?: string,
+): Promise<null | Stripe.Subscription[]> => {
   // @ts-ignore
   const userSession = await getServerSession(authOptions)
-  if (!userSession?.user.id) {
+  if (!userSession?.user.id && !userId) {
     return null
   }
 
-  const customer = await findStripeCustomer(userSession)
+  const customer = await findStripeCustomer(userId ?? userSession?.user.id)
   if (!customer) {
     return null
   }
@@ -108,11 +108,13 @@ export const isUserSubscribed = async (): Promise<{
   }
 }
 
-export const isUserPremium = async (): Promise<{
+export const isUserPremium = async (
+  userId?: string,
+): Promise<{
   isPremium: boolean
   currentPlans?: string[]
 }> => {
-  const subs = await getUserActiveSubscriptions()
+  const subs = await getUserActiveSubscriptions(userId)
 
   if (!subs) {
     return {

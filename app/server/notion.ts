@@ -132,7 +132,7 @@ export const getCalendarICSData = async (
     },
   })
 
-  const { isPremium } = await isUserPremium()
+  const { isPremium } = await isUserPremium(calendar?.userId)
 
   if (!calendar || (!isPremium && !calendar.primary)) {
     return null
@@ -152,6 +152,7 @@ export const getCalendarICSData = async (
       client,
       calendar.databaseId,
     )) as Array<PageObjectResponse>
+
     const events: EventAttributes[] = []
     if (data) {
       data.forEach((e) => {
