@@ -93,6 +93,7 @@ const getUserActiveSubscriptions = async (
 export const isUserSubscribed = async (): Promise<{
   isSubscribed: boolean
   plans?: string[]
+  fullPlanData?: Stripe.Subscription[]
 }> => {
   const subs = await getUserActiveSubscriptions()
 
@@ -104,6 +105,7 @@ export const isUserSubscribed = async (): Promise<{
     return {
       isSubscribed: true,
       plans: subs.map((s) => s.id),
+      fullPlanData: subs,
     }
   }
 }

@@ -32,9 +32,26 @@ export async function POST(request: Request) {
   }
 
   const userSubscribed = await isUserSubscribed()
-  if (userSubscribed.isSubscribed && userSubscribed.plans?.length) {
+  if (
+    userSubscribed.isSubscribed &&
+    userSubscribed?.plans?.length &&
+    userSubscribed.fullPlanData?.length
+  ) {
     const { url } = await stripe.billingPortal.sessions.create({
       customer,
+      flow_data: {
+        // @ts-ignore TODO: Once stable, remove this
+        type: 'subscription_update_confirm',
+        subscription_update_confirm: {
+          recurring_items: [
+            {
+              id: userSubscribed.fullPlanData[0].items.data[0].id,
+              price: res.line_price,
+            },
+          ],
+          subscription: userSubscribed.plans[0],
+        },
+      },
       return_url: `${process.env.NEXT_PUBLIC_ROOT_URL}/dashboard`,
     })
 
