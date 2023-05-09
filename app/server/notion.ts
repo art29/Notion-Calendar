@@ -269,11 +269,11 @@ const getValueFromProperty = (
   } else if (property?.type === 'url') {
     return property.url
   } else if (property?.type === 'select') {
-    return property.select.name
+    return property.select?.name
   } else if (property?.type === 'multi_select') {
     return property.multi_select.map((s) => s.name).join(', ')
   } else if (property?.type === 'status') {
-    return property.status.name
+    return property.status?.name
   } else if (property?.type === 'date') {
     if (property.date) {
       if (property.date.end) {

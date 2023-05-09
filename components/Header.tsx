@@ -19,7 +19,7 @@ const Header = ({ session, isPremium }: HeaderProps) => {
         <Link href="/" className="w-10 h-10 flex items-center">
           <Image src={'/logo.png'} width={35} height={35} alt="Logo" />
         </Link>
-        <Link href="/" className="text-black">
+        <Link href={session ? '/dashboard' : '/'} className="text-black">
           Notion Calendar
         </Link>
         <Link href="#pricing" className="text-black">
