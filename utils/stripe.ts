@@ -71,7 +71,7 @@ const getUserActiveSubscriptions = async (
   userId?: string,
 ): Promise<null | Stripe.Subscription[]> => {
   // @ts-ignore
-  const user = userId ?? (await getServerSession(authOptions)).user.id
+  const user = userId ?? (await getServerSession(authOptions))?.user?.id
   if (!user) {
     return null
   }
