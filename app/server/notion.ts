@@ -177,16 +177,14 @@ export const getCalendarICSData = async (
             endInputType: 'local',
           })
         } else if (dateField.duration) {
-          if (dateField.end) {
-            events.push({
-              title: title,
-              description: description ?? '',
-              start: dateField.start,
-              duration: dateField.duration,
-              startOutputType: 'local',
-              endInputType: 'local',
-            })
-          }
+          events.push({
+            title: title,
+            description: description ?? '',
+            start: dateField.start,
+            duration: dateField.duration,
+            startOutputType: 'local',
+            endInputType: 'local',
+          })
         }
       })
     }
