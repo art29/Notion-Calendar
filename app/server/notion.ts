@@ -200,26 +200,39 @@ const getDateFromDatabase = (
   const property = Object.values(properties).find((p) => p.id === id)
 
   if (property?.type === 'date' && property.date) {
-    const startDate = dayjs(property.date.start).utc().toDate()
+    const isFullDay =
+      hasNoTime(property.date.start) &&
+      (hasNoTime(property.date.end) || !property.date.end)
+    const startDate = isFullDay
+      ? new Date(property.date.start)
+      : dayjs(property.date.start).utc().toDate()
     const event: NotionDateType = {
       start: [
         startDate.getFullYear(),
         startDate.getMonth() + 1,
         startDate.getDate(),
-        startDate.getHours(),
-        startDate.getMinutes(),
       ],
     }
 
+    if (!isFullDay) {
+      event['start'].push(startDate.getHours())
+      event['start'].push(startDate.getMinutes())
+    }
+
     if (property.date.end) {
-      const endDate = dayjs(property.date.end).utc().toDate()
+      const endDate = isFullDay
+        ? new Date(property.date.end)
+        : dayjs(property.date.end).utc().toDate()
       event['end'] = [
         endDate.getFullYear(),
         endDate.getMonth() + 1,
         endDate.getDate(),
-        endDate.getHours(),
-        endDate.getMinutes(),
       ]
+
+      if (!isFullDay) {
+        event['end'].push(endDate.getHours())
+        event['end'].push(endDate.getMinutes())
+      }
     } else {
       event['duration'] = {
         hours: 24,
@@ -231,6 +244,10 @@ const getDateFromDatabase = (
   } else {
     return null
   }
+}
+
+const hasNoTime = (date: string) => {
+  return dayjs(date).hour() === 0 && dayjs(date).minute() === 0
 }
 
 interface TagifyString {

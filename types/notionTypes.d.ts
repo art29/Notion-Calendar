@@ -769,7 +769,7 @@ export type DateResponse = {
 }
 
 export interface NotionDateType {
-  start: [number, number, number, number, number]
-  end?: [number, number, number, number, number]
+  start: [number, number, number, number, number] | [number, number, number]
+  end?: [number, number, number, number, number] | [number, number, number]
   duration?: DurationObject
 }
