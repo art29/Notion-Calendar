@@ -10,15 +10,13 @@ import { getServerSession, Session } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/app/server/db'
-import {
-  NotionDateType,
-  NotionProperty,
-  NotionPropertyTypes,
-} from '@/types/notionTypes'
+import { NotionDateType, NotionProperty } from '@/types/notionTypes'
 import dayjs from 'dayjs'
+import utc from 'dayjs/plugin/utc'
 import { EventAttributes } from 'ics'
 import { isUserPremium } from '@/utils/stripe'
 
+dayjs.extend(utc)
 export const hasNotionDatabases = async () => {
   // @ts-ignore
   const session = await getServerSession(authOptions)
@@ -173,8 +171,6 @@ export const getCalendarICSData = async (
             description: description ?? '',
             start: dateField.start,
             end: dateField.end,
-            startOutputType: 'local',
-            endInputType: 'local',
           })
         } else if (dateField.duration) {
           events.push({
@@ -182,8 +178,6 @@ export const getCalendarICSData = async (
             description: description ?? '',
             start: dateField.start,
             duration: dateField.duration,
-            startOutputType: 'local',
-            endInputType: 'local',
           })
         }
       })
@@ -206,7 +200,7 @@ const getDateFromDatabase = (
   const property = Object.values(properties).find((p) => p.id === id)
 
   if (property?.type === 'date' && property.date) {
-    const startDate = new Date(property.date.start)
+    const startDate = dayjs(property.date.start).utc().toDate()
     const event: NotionDateType = {
       start: [
         startDate.getFullYear(),
@@ -218,7 +212,7 @@ const getDateFromDatabase = (
     }
 
     if (property.date.end) {
-      const endDate = new Date(property.date.end)
+      const endDate = dayjs(property.date.end).utc().toDate()
       event['end'] = [
         endDate.getFullYear(),
         endDate.getMonth() + 1,
