@@ -171,6 +171,7 @@ export const getCalendarICSData = async (
             description: description ?? '',
             start: dateField.start,
             end: dateField.end,
+            startInputType: 'utc',
           })
         } else if (dateField.duration) {
           events.push({
@@ -178,6 +179,7 @@ export const getCalendarICSData = async (
             description: description ?? '',
             start: dateField.start,
             duration: dateField.duration,
+            startInputType: 'utc',
           })
         }
       })
