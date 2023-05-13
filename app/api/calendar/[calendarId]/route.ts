@@ -23,12 +23,15 @@ export async function GET(
     const { error, value } = createEvents(data)
 
     if (value) {
-      return new Response(value, {
-        status: 200,
-        headers: {
-          'Content-Type': 'text/calendar',
+      return new Response(
+        value.replace('BEGIN:VCALENDAR', 'BEGIN:VCALENDAR\nX-WR-TIMEZONE:UTC'),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/calendar',
+          },
         },
-      })
+      )
     } else {
       return NextResponse.json({ error: 'Cannot get file' })
     }
