@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import { Reminder } from '@/components/ConfigureModal'
 import { prisma } from '@/app/server/db'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
@@ -7,17 +6,7 @@ import { z } from 'zod'
 import randomstring from 'randomstring'
 import { getNotionData } from '@/app/server/notion'
 import { isUserPremium } from '@/utils/stripe'
-
-const formatReminder = (reminder: Reminder): { remindAt: number } => {
-  switch (reminder.unit) {
-    case 'min':
-      return { remindAt: reminder.duration }
-    case 'hour':
-      return { remindAt: reminder.duration * 60 }
-    case 'day':
-      return { remindAt: reminder.duration * 3600 }
-  }
-}
+import { formatReminder } from '@/utils/utils'
 
 const databaseApiFormSchema = z.object({
   event_name: z.string(),
@@ -69,6 +58,7 @@ export async function POST(request: Request) {
   } else {
     const { isPremium } = await isUserPremium()
 
+    // Stop access to more than one database when not premium
     if (!isPremium) {
       const currentDbs = await prisma.calendar.findMany({
         where: {

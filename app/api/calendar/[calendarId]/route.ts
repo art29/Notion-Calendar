@@ -20,10 +20,11 @@ export async function GET(
   const data = await getCalendarICSData(calendarId.replace('.ics', ''), hash)
 
   if (data) {
-    const { error, value } = createEvents(data)
+    const { value } = createEvents(data)
 
     if (value) {
       return new Response(
+        // Adding Timezone to set default timezone to UTC
         value.replace('BEGIN:VCALENDAR', 'BEGIN:VCALENDAR\nX-WR-TIMEZONE:UTC'),
         {
           status: 200,

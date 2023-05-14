@@ -1,6 +1,7 @@
 import { TagifySettings } from '@yaireo/tagify'
 import { EnhancedNotionDatabaseObject } from '@/app/dashboard/page'
 import { RichTextItemResponse } from '@notionhq/client/build/src/api-endpoints'
+import { Reminder } from '@/components/ConfigureModal'
 
 export const tagifySettings: TagifySettings = {
   mode: 'mix',
@@ -51,4 +52,15 @@ export const generateTagifyWhitelist = (
         value: p.name,
       }
     })
+}
+
+export const formatReminder = (reminder: Reminder): { remindAt: number } => {
+  switch (reminder.unit) {
+    case 'min':
+      return { remindAt: reminder.duration }
+    case 'hour':
+      return { remindAt: reminder.duration * 60 }
+    case 'day':
+      return { remindAt: reminder.duration * 3600 }
+  }
 }

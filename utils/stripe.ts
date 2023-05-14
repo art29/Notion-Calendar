@@ -11,8 +11,8 @@ const key =
 export const stripe = new Stripe(key, {
   apiVersion: '2022-11-15',
   appInfo: {
-    name: 'Next.js Subscription Starter',
-    version: '0.1.0',
+    name: 'Notion Calendar',
+    version: '1.0.0',
   },
 })
 

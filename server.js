@@ -1,3 +1,4 @@
+// This file is here only for Apache/Nginx Passenger server
 const path = require('path')
 const nextPath = path.join(__dirname, 'node_modules', '.bin', 'next')
 process.argv.length = 1

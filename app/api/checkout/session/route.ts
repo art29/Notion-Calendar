@@ -87,7 +87,7 @@ export async function GET(request: Request) {
   const userSession = await getServerSession(authOptions)
   if (!userSession?.user.id) {
     return NextResponse.json(
-      { error: 'account non authenticated' },
+      { error: 'Account non authenticated' },
       { status: 403 },
     )
   }
