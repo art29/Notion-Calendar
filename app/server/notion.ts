@@ -225,7 +225,7 @@ const getDateFromDatabase = (
 
     if (property.date.end) {
       const endDate = isFullDay
-        ? new Date(property.date.end)
+        ? dayjs(property.date.end).add(1, 'day').toDate()
         : dayjs(property.date.end).utc().toDate()
       event['end'] = [
         endDate.getFullYear(),
