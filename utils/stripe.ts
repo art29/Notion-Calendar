@@ -2,7 +2,6 @@ import Stripe from 'stripe'
 import { getServerSession, Session } from 'next-auth'
 import { prisma } from '@/app/server/db'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-import { valid } from 'semver'
 
 const key =
   process.env.NODE_ENV === 'production'
