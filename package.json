@@ -36,7 +36,7 @@
     "eslint-config-next": "13.3.0",
     "eslint-import-resolver-typescript": "^3.5.5",
     "ics": "^3.1.0",
-    "next": "^13.4.1",
+    "next": "^13.2.4",
     "next-auth": "^4.22.0",
     "postcss": "8.4.21",
     "randomstring": "^1.2.3",
