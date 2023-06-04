@@ -4,7 +4,6 @@ import { Session } from 'next-auth'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faChevronDown } from '@fortawesome/free-solid-svg-icons'
 import Link from 'next/link'
-import fetch from 'node-fetch'
 
 interface HeaderDropdownProps {
   session: Session

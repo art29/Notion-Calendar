@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Button from '@/components/Button'
 import { signIn } from 'next-auth/react'
 import { Session } from 'next-auth'
-import fetch from 'node-fetch'
 import { getStripe } from '@/utils/stripeClient'
 import { pricing } from '@/utils/config'
 
