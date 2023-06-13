@@ -238,7 +238,9 @@ const getDateFromDatabase = (
         event['end'].push(endDate.getMinutes())
       }
     } else {
-      const endDate = dayjs(property.date.start).utc().toDate()
+      const endDate = isFullDay
+        ? dayjs(property.date.start).utc().toDate()
+        : dayjs(property.date.start).add(1, 'hour').toDate()
       event['end'] = [
         endDate.getFullYear(),
         endDate.getMonth() + 1,
