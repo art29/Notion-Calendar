@@ -238,10 +238,12 @@ const getDateFromDatabase = (
         event['end'].push(endDate.getMinutes())
       }
     } else {
-      event['duration'] = {
-        hours: 24,
-        minutes: 0,
-      }
+      const endDate = dayjs(property.date.start).utc().toDate()
+      event['end'] = [
+        endDate.getFullYear(),
+        endDate.getMonth() + 1,
+        endDate.getDate(),
+      ]
     }
 
     return event
