@@ -2,7 +2,7 @@
 
 import 'server-only'
 import { getNotionData, hasNotionDatabases } from '@/app/server/notion'
-import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints'
+import { DataSourceObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 import SignInButton from '@/components/SignInButton'
 import Alert from '@/components/Alert'
 import NotionDatabaseTable from '@/components/NotionDatabaseTable'
@@ -10,8 +10,7 @@ import type { Calendar, CalendarReminder } from '@prisma/client'
 import { isUserPremium } from '@/utils/stripe'
 import Link from 'next/link'
 
-export interface EnhancedNotionDatabaseObject extends DatabaseObjectResponse {
-  properties?: Record<string, any>
+export interface EnhancedNotionDatabaseObject extends DataSourceObjectResponse {
   configured: boolean
   calendar?: Calendar & { CalendarReminder: CalendarReminder[] }
   url: string

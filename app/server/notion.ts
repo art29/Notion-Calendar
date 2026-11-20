@@ -1,8 +1,8 @@
 import { Client } from '@notionhq/client'
 import {
-  DatabaseObjectResponse,
+  DataSourceObjectResponse,
   PageObjectResponse,
-  PartialDatabaseObjectResponse,
+  PartialDataSourceObjectResponse,
   PartialPageObjectResponse,
 } from '@notionhq/client/build/src/api-endpoints'
 import { EnhancedNotionDatabaseObject } from '@/app/dashboard/page'
@@ -73,15 +73,25 @@ export const getNotionData = async (
   if (user && dbs) {
     const client = new Client({ auth: user?.access_token ?? '' })
     const databases = await getDatabasesByName(client)
-    const filteredDB =
-      (databases.filter(
-        (d: any) => d.object === 'database',
-      ) as DatabaseObjectResponse[]) ?? []
+    const filteredDB = databases.filter(
+      (database): database is DataSourceObjectResponse =>
+        database.object === 'data_source' && 'title' in database,
+    )
+
     return filteredDB.map((db) => {
-      const savedDb = dbs.find((d) => d.databaseId === db.id)
+      const databaseParent =
+        'database_parent' in db && db.database_parent.type === 'database_id'
+          ? db.database_parent.database_id
+          : null
+      const savedDb = dbs.find(
+        (calendar) =>
+          calendar.databaseId === db.id ||
+          (databaseParent !== null && calendar.databaseId === databaseParent),
+      )
 
       return {
         ...db,
+        properties: db.properties,
         configured: !!savedDb,
         calendar: savedDb,
         url: savedDb?.calendarHash ?? '',
@@ -92,7 +102,16 @@ export const getNotionData = async (
   }
 }
 
-export const getDatabasesByName = async (notion: Client): Promise<any[]> => {
+export const getDatabasesByName = async (
+  notion: Client,
+): Promise<
+  (
+    | PageObjectResponse
+    | PartialPageObjectResponse
+    | PartialDataSourceObjectResponse
+    | DataSourceObjectResponse
+  )[]
+> => {
   const response = await notion.search({
     query: '',
     filter: {
@@ -187,8 +206,19 @@ export const getCalendarICSData = async (
   }
 }
 export const queryDatabase = async (notion: Client, databaseId: string) => {
-  const response = await (notion as any).dataSources.query({
-    data_source_id: databaseId,
+  let dataSourceId = databaseId
+
+  try {
+    const database = await notion.databases.retrieve({
+      database_id: databaseId,
+    })
+    dataSourceId = (database as any).data_sources?.[0]?.id ?? databaseId
+  } catch {
+    dataSourceId = databaseId
+  }
+
+  const response = await notion.dataSources.query({
+    data_source_id: dataSourceId,
   })
 
   return response.results
