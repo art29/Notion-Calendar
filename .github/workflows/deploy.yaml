@@ -4,6 +4,8 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/notion_calendar
     steps:
       - name: Checkout Codebase
         uses: actions/checkout@v7
