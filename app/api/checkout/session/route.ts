@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       flow_data: {
         type: 'subscription_update_confirm',
         subscription_update_confirm: {
-          recurring_items: [
+          items: [
             {
               id: userSubscribed.fullPlanData[0].items.data[0].id,
               price: res.line_price,

@@ -6,7 +6,7 @@ import { DatabaseObjectResponse } from '@notionhq/client/build/src/api-endpoints
 import SignInButton from '@/components/SignInButton'
 import Alert from '@/components/Alert'
 import NotionDatabaseTable from '@/components/NotionDatabaseTable'
-import { Calendar, CalendarReminder } from '.prisma/client'
+import type { Calendar, CalendarReminder } from '@prisma/client'
 import { isUserPremium } from '@/utils/stripe'
 import Link from 'next/link'
 

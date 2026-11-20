@@ -8,7 +8,6 @@ const key =
     ? (process.env.STRIPE_SECRET_KEY_LIVE ?? '')
     : (process.env.STRIPE_SECRET_KEY_TEST ?? '')
 export const stripe = new Stripe(key, {
-  apiVersion: '2022-11-15',
   appInfo: {
     name: 'Notion Calendar',
     version: '1.0.0',

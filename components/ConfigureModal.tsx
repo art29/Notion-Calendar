@@ -13,7 +13,7 @@ import { faTrash, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { CalendarReminder } from '.prisma/client'
+import type { CalendarReminder } from '@prisma/client'
 
 Modal.setAppElement('#body')
 
