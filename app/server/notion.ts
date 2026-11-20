@@ -1,7 +1,9 @@
 import { Client } from '@notionhq/client'
 import {
+  DatabaseObjectResponse,
   DataSourceObjectResponse,
   PageObjectResponse,
+  PartialDatabaseObjectResponse,
   PartialDataSourceObjectResponse,
   PartialPageObjectResponse,
 } from '@notionhq/client/build/src/api-endpoints'
@@ -71,32 +73,103 @@ export const getNotionData = async (
   })
 
   if (user && dbs) {
-    const client = new Client({ auth: user?.access_token ?? '' })
-    const databases = await getDatabasesByName(client)
-    const filteredDB = databases.filter(
-      (database): database is DataSourceObjectResponse =>
-        database.object === 'data_source' && 'title' in database,
+    const client = new Client({ auth: user.access_token ?? '' })
+    const results = await getDatabasesByName(client)
+
+    const resolvedSavedDatabases = await Promise.all(
+      dbs.map(async (calendar) => {
+        const aliases = new Set<string>([calendar.databaseId])
+
+        try {
+          const database = await client.databases.retrieve({
+            database_id: calendar.databaseId,
+          })
+          aliases.add(database.id)
+          if ('data_sources' in database) {
+            database.data_sources.forEach((dataSource) =>
+              aliases.add(dataSource.id),
+            )
+          }
+        } catch {
+          try {
+            const dataSource = await client.dataSources.retrieve({
+              data_source_id: calendar.databaseId,
+            })
+            aliases.add(dataSource.id)
+            if (
+              'database_parent' in dataSource &&
+              dataSource.database_parent.type === 'database_id'
+            ) {
+              aliases.add(dataSource.database_parent.database_id)
+            }
+          } catch {
+            // The saved ID may no longer be shared with the integration.
+          }
+        }
+
+        return { calendar, aliases }
+      }),
     )
 
-    return filteredDB.map((db) => {
-      const databaseParent =
-        'database_parent' in db && db.database_parent.type === 'database_id'
-          ? db.database_parent.database_id
-          : null
-      const savedDb = dbs.find(
-        (calendar) =>
-          calendar.databaseId === db.id ||
-          (databaseParent !== null && calendar.databaseId === databaseParent),
-      )
+    const normalized = await Promise.all(
+      results
+        .filter(
+          (
+            result,
+          ): result is DatabaseObjectResponse | DataSourceObjectResponse =>
+            (result.object === 'database' || result.object === 'data_source') &&
+            'title' in result,
+        )
+        .map(async (result) => {
+          const aliases = new Set<string>([result.id])
+          let properties: Record<string, any> = {}
 
-      return {
-        ...db,
-        properties: db.properties,
-        configured: !!savedDb,
-        calendar: savedDb,
-        url: savedDb?.calendarHash ?? '',
-      }
-    })
+          if (result.object === 'database') {
+            const dataSourceId = result.data_sources?.[0]?.id
+            if (dataSourceId) aliases.add(dataSourceId)
+            if (dataSourceId) {
+              try {
+                const dataSource = await client.dataSources.retrieve({
+                  data_source_id: dataSourceId,
+                })
+                properties =
+                  'properties' in dataSource ? dataSource.properties : {}
+              } catch {
+                properties = {}
+              }
+            }
+          } else {
+            properties = result.properties
+            if (result.database_parent.type === 'database_id') {
+              aliases.add(result.database_parent.database_id)
+            }
+          }
+
+          const savedDb = resolvedSavedDatabases.find((resolved) =>
+            [...resolved.aliases].some((alias) => aliases.has(alias)),
+          )?.calendar
+
+          const id =
+            result.object === 'database'
+              ? result.id
+              : result.database_parent.type === 'database_id'
+                ? result.database_parent.database_id
+                : result.id
+
+          return {
+            id,
+            title: result.title,
+            properties,
+            configured: !!savedDb,
+            calendar: savedDb,
+            url: savedDb?.calendarHash ?? '',
+          }
+        }),
+    )
+
+    return Array.from(
+      new Map(normalized.map((database) => [database.id, database])).values(),
+    )
   } else {
     return []
   }
@@ -108,22 +181,39 @@ export const getDatabasesByName = async (
   (
     | PageObjectResponse
     | PartialPageObjectResponse
+    | PartialDatabaseObjectResponse
+    | DatabaseObjectResponse
     | PartialDataSourceObjectResponse
     | DataSourceObjectResponse
   )[]
 > => {
-  const response = await notion.search({
-    query: '',
-    filter: {
-      value: 'data_source',
-      property: 'object',
-    },
-    sort: {
-      direction: 'ascending',
-      timestamp: 'last_edited_time',
-    },
-  })
-  return response.results
+  const results: (
+    | PageObjectResponse
+    | PartialPageObjectResponse
+    | PartialDatabaseObjectResponse
+    | DatabaseObjectResponse
+    | PartialDataSourceObjectResponse
+    | DataSourceObjectResponse
+  )[] = []
+  let startCursor: string | undefined
+
+  do {
+    const response = await notion.search({
+      query: '',
+      sort: {
+        direction: 'descending',
+        timestamp: 'last_edited_time',
+      },
+      start_cursor: startCursor,
+      page_size: 100,
+    })
+    results.push(...response.results)
+    startCursor = response.has_more
+      ? (response.next_cursor ?? undefined)
+      : undefined
+  } while (startCursor)
+
+  return results
 }
 
 export const getCalendarICSData = async (
@@ -212,7 +302,9 @@ export const queryDatabase = async (notion: Client, databaseId: string) => {
     const database = await notion.databases.retrieve({
       database_id: databaseId,
     })
-    dataSourceId = (database as any).data_sources?.[0]?.id ?? databaseId
+    if ('data_sources' in database && database.data_sources.length) {
+      dataSourceId = database.data_sources[0].id
+    }
   } catch {
     dataSourceId = databaseId
   }

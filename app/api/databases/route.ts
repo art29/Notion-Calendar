@@ -37,8 +37,16 @@ export async function GET(request: Request) {
     )
   }
 
-  const data = await getNotionData(session)
-  return NextResponse.json(data)
+  try {
+    const data = await getNotionData(session)
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('Failed to retrieve Notion databases:', error)
+    return NextResponse.json(
+      { error: 'failed to retrieve Notion databases' },
+      { status: 502 },
+    )
+  }
 }
 
 export async function POST(request: Request) {
