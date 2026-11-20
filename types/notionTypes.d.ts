@@ -98,7 +98,12 @@ export type NotionPropertyTypes =
     }
   | {
       type: 'formula'
-      formula: FormulaPropertyResponse
+      formula:
+        | { type: 'string'; string: string | null }
+        | { type: 'number'; number: number | null }
+        | { type: 'boolean'; boolean: boolean | null }
+        | { type: 'date'; date: DateResponse | null }
+        | { type: 'unsupported'; unsupported: Record<string, never> }
       id: string
     }
   | {

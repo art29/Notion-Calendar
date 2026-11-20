@@ -23,6 +23,7 @@ export const generateTagifyWhitelist = (
     title: [
       'date',
       'email',
+      'formula',
       'number',
       'phone_number',
       'select',
@@ -33,6 +34,7 @@ export const generateTagifyWhitelist = (
     description: [
       'date',
       'email',
+      'formula',
       'number',
       'phone_number',
       'select',
@@ -42,7 +44,7 @@ export const generateTagifyWhitelist = (
       'title',
       'url',
     ],
-    date: ['date'],
+    date: ['date', 'formula'],
   }
 
   return Object.values(database.properties ?? {})

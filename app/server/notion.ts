@@ -200,13 +200,19 @@ const getDateFromDatabase = (
 ): NotionDateType | null => {
   const property = Object.values(properties).find((p) => p.id === id)
 
-  if (property?.type === 'date' && property.date) {
+  const date =
+    property?.type === 'date'
+      ? property.date
+      : property?.type === 'formula' && property.formula.type === 'date'
+        ? property.formula.date
+        : null
+
+  if (date) {
     const isFullDay =
-      hasNoTime(property.date.start) &&
-      (hasNoTime(property.date.end) || !property.date.end)
+      hasNoTime(date.start) && (hasNoTime(date.end) || !date.end)
     const startDate = isFullDay
-      ? new Date(property.date.start)
-      : dayjs(property.date.start).utc().toDate()
+      ? new Date(date.start)
+      : dayjs(date.start).utc().toDate()
     const event: NotionDateType = {
       start: [
         startDate.getFullYear(),
@@ -220,10 +226,10 @@ const getDateFromDatabase = (
       event['start'].push(startDate.getMinutes())
     }
 
-    if (property.date.end) {
+    if (date.end) {
       const endDate = isFullDay
-        ? dayjs(property.date.end).add(1, 'day').toDate()
-        : dayjs(property.date.end).utc().toDate()
+        ? dayjs(date.end).add(1, 'day').toDate()
+        : dayjs(date.end).utc().toDate()
       event['end'] = [
         endDate.getFullYear(),
         endDate.getMonth() + 1,
@@ -236,8 +242,8 @@ const getDateFromDatabase = (
       }
     } else {
       const endDate = isFullDay
-        ? dayjs(property.date.start).utc().toDate()
-        : dayjs(property.date.start).add(1, 'hour').toDate()
+        ? dayjs(date.start).utc().toDate()
+        : dayjs(date.start).add(1, 'hour').toDate()
       event['end'] = [
         endDate.getFullYear(),
         endDate.getMonth() + 1,
@@ -286,6 +292,22 @@ const getValueFromProperty = (
     return property.multi_select.map((s) => s.name).join(', ')
   } else if (property?.type === 'status') {
     return property.status?.name
+  } else if (property?.type === 'formula') {
+    if (property.formula.type === 'string') return property.formula.string
+    if (property.formula.type === 'number')
+      return property.formula.number == null
+        ? null
+        : String(property.formula.number)
+    if (property.formula.type === 'boolean')
+      return property.formula.boolean == null
+        ? null
+        : String(property.formula.boolean)
+    if (property.formula.type === 'date' && property.formula.date) {
+      return property.formula.date.end
+        ? `${dayjs(property.formula.date.start).format('DD-MM-YYYY')} - ${dayjs(property.formula.date.end).format('DD-MM-YYYY')}`
+        : dayjs(property.formula.date.start).format('DD-MM-YYYY')
+    }
+    return null
   } else if (property?.type === 'date') {
     if (property.date) {
       if (property.date.end) {
