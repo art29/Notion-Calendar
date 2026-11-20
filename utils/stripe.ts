@@ -5,8 +5,8 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 
 const key =
   process.env.NODE_ENV === 'production'
-    ? process.env.STRIPE_SECRET_KEY_LIVE ?? ''
-    : process.env.STRIPE_SECRET_KEY_TEST ?? ''
+    ? (process.env.STRIPE_SECRET_KEY_LIVE ?? '')
+    : (process.env.STRIPE_SECRET_KEY_TEST ?? '')
 export const stripe = new Stripe(key, {
   apiVersion: '2022-11-15',
   appInfo: {
