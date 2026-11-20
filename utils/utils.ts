@@ -45,7 +45,7 @@ export const generateTagifyWhitelist = (
     date: ['date'],
   }
 
-  return Object.values(database.properties)
+  return Object.values(database.properties ?? {})
     .filter((p) => ALLOWED_PROPERTIES[type].includes(p.type))
     .map((p) => {
       return {

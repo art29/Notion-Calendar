@@ -1,7 +1,7 @@
 'use client'
 
 export interface ButtonProps {
-  children: JSX.Element | string
+  children: React.ReactNode
   theme?: 'dark' | 'light' | 'link' | 'none'
   type?: 'submit' | 'button'
   onClick?: () => void

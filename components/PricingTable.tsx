@@ -32,7 +32,13 @@ const PricingTable = ({ session, currentPlans }: PricingTableProps) => {
             window.location.href = data.update_url
           } else {
             const stripe = await getStripe()
-            stripe?.redirectToCheckout({ sessionId: data.sessionId })
+            ;(
+              stripe as unknown as {
+                redirectToCheckout: (args: {
+                  sessionId: string
+                }) => Promise<void>
+              }
+            ).redirectToCheckout({ sessionId: data.sessionId })
           }
         })
         .catch((err) => console.log(err))

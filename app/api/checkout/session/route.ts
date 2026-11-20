@@ -40,7 +40,6 @@ export async function POST(request: Request) {
     const { url } = await stripe.billingPortal.sessions.create({
       customer,
       flow_data: {
-        // @ts-ignore TODO: Once stable, remove this
         type: 'subscription_update_confirm',
         subscription_update_confirm: {
           recurring_items: [
@@ -58,7 +57,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ update_url: url }, { status: 200 })
   } else {
     const stripeSession = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       billing_address_collection: 'required',
       customer,
       line_items: [
@@ -70,7 +68,6 @@ export async function POST(request: Request) {
       mode: 'subscription',
       allow_promotion_codes: true,
       subscription_data: {
-        trial_from_plan: true,
         metadata: {},
       },
       payment_method_collection: 'if_required',

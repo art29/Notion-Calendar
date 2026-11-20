@@ -19,8 +19,6 @@ const HeaderDropdown = ({ session, isPremium }: HeaderDropdownProps) => {
         .then((data) => {
           setSessionUrl(data.url)
         })
-    } else {
-      setSessionUrl(null)
     }
   }, [isPremium])
 

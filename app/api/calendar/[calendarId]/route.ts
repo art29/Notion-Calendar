@@ -6,10 +6,10 @@ export async function GET(
   {
     params,
   }: {
-    params: { calendarId: string }
+    params: Promise<{ calendarId: string }>
   },
 ) {
-  const calendarId = params.calendarId
+  const { calendarId } = await params
   const { searchParams } = new URL(request.url)
   const hash = searchParams.get('hash')
 

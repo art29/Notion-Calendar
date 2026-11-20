@@ -123,6 +123,7 @@ const ConfigureModal = ({
   >([])
   const [dataLoaded, setDataLoaded] = useState(false)
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     setDataLoaded(false)
     if (database) {

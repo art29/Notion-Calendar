@@ -3,7 +3,7 @@
 import AccordionPanel from '@/components/AccordionPanel'
 import Link from 'next/link'
 
-export default async function Resources() {
+export default function Resources() {
   return (
     <div className="mx-auto px-4 lg:px-10 w-full lg:w-[60%]">
       <h2 className="text-4xl mb-4 font-medium">Resources</h2>

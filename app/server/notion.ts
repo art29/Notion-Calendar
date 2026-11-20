@@ -75,7 +75,7 @@ export const getNotionData = async (
     const databases = await getDatabasesByName(client)
     const filteredDB =
       (databases.filter(
-        (d) => d.object === 'database',
+        (d: any) => d.object === 'database',
       ) as DatabaseObjectResponse[]) ?? []
     return filteredDB.map((db) => {
       const savedDb = dbs.find((d) => d.databaseId === db.id)
@@ -92,20 +92,11 @@ export const getNotionData = async (
   }
 }
 
-export const getDatabasesByName = async (
-  notion: Client,
-): Promise<
-  (
-    | PageObjectResponse
-    | PartialPageObjectResponse
-    | PartialDatabaseObjectResponse
-    | DatabaseObjectResponse
-  )[]
-> => {
+export const getDatabasesByName = async (notion: Client): Promise<any[]> => {
   const response = await notion.search({
     query: '',
     filter: {
-      value: 'database',
+      value: 'data_source',
       property: 'object',
     },
     sort: {
@@ -154,11 +145,17 @@ export const getCalendarICSData = async (
     const events: EventAttributes[] = []
     if (data) {
       data.forEach((e) => {
-        const dateField = getDateFromDatabase(calendar.dateField, e.properties)
-        const title = replaceTagifyIdByValue(calendar.title, e.properties)
+        const dateField = getDateFromDatabase(
+          calendar.dateField,
+          e.properties as unknown as NotionProperty,
+        )
+        const title = replaceTagifyIdByValue(
+          calendar.title,
+          e.properties as unknown as NotionProperty,
+        )
         const description = replaceTagifyIdByValue(
           calendar.description,
-          e.properties,
+          e.properties as unknown as NotionProperty,
         )
 
         if (!dateField || !title) {
@@ -190,8 +187,8 @@ export const getCalendarICSData = async (
   }
 }
 export const queryDatabase = async (notion: Client, databaseId: string) => {
-  const response = await notion.databases.query({
-    database_id: databaseId,
+  const response = await (notion as any).dataSources.query({
+    data_source_id: databaseId,
   })
 
   return response.results
@@ -316,6 +313,6 @@ const getValueFromProperty = (
   }
 }
 
-const hasNoTime = (date: string) => {
+const hasNoTime = (date: string | null) => {
   return dayjs(date).hour() === 0 && dayjs(date).minute() === 0
 }

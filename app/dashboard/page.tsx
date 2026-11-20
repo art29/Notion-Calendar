@@ -11,6 +11,7 @@ import { isUserPremium } from '@/utils/stripe'
 import Link from 'next/link'
 
 export interface EnhancedNotionDatabaseObject extends DatabaseObjectResponse {
+  properties?: Record<string, any>
   configured: boolean
   calendar?: Calendar & { CalendarReminder: CalendarReminder[] }
   url: string

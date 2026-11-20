@@ -121,10 +121,7 @@ const NotionDatabaseTable = ({ isPremium }: NotionDatabaseTableProps) => {
                     {d.configured && d.calendar && !isDisabled(d) ? (
                       <>
                         <CopyToClipboard
-                          text={
-                            `${process.env.NEXT_PUBLIC_ROOT_URL}/api/calendar/${d.calendar.id}.ics?hash=${d.calendar.calendarHash}` ??
-                            ''
-                          }
+                          text={`${process.env.NEXT_PUBLIC_ROOT_URL}/api/calendar/${d.calendar.id}.ics?hash=${d.calendar.calendarHash}`}
                           onCopy={() =>
                             setCopiedCalendarUrl(d.calendar?.id ?? '')
                           }
